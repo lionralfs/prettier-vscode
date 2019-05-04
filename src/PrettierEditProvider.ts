@@ -9,13 +9,14 @@ import {
 } from 'vscode';
 
 import { safeExecution, addToOutput, setUsedModule } from './errorHandler';
-import { getGroup, getParsersFromLanguageId, getConfig, getAbsolutePath } from './utils';
+import { getParsersFromLanguageId, getConfig, getAbsolutePath } from './utils';
 import { requireLocalPkg } from './requirePkg';
 
 import {
     PrettierVSCodeConfig,
     Prettier,
     PrettierEslintFormat,
+    PrettierTslintFormat,
     ParserOption,
     PrettierStylelint,
     PrettierConfig,
@@ -104,7 +105,7 @@ async function format(
 
     const dynamicParsers = getParsersFromLanguageId(
         languageId,
-        localPrettier.version,
+        localPrettier,
         isUntitled ? undefined : fileName
     );
     let useBundled = false;
@@ -113,7 +114,7 @@ async function format(
     if (!dynamicParsers.length) {
         const bundledParsers = getParsersFromLanguageId(
             languageId,
-            bundledPrettier.version,
+            bundledPrettier,
             isUntitled ? undefined : fileName
         );
         parser = bundledParsers[0] || 'babylon';
@@ -124,9 +125,13 @@ async function format(
     } else {
         parser = dynamicParsers[0];
     }
-    const doesParserSupportEslint = getGroup('JavaScript').some(lang =>
-        lang.parsers.includes(parser)
-    );
+    const doesParserSupportEslint = [
+        'javascript',
+        'javascriptreact',
+        'typescript',
+        'typescriptreact',
+        'vue',
+    ].includes(languageId);
 
     const config = getAbsolutePath(uri, getConfig(uri).config);
 
@@ -163,8 +168,30 @@ async function format(
             useTabs: vscodeConfig.useTabs,
             proseWrap: vscodeConfig.proseWrap,
             arrowParens: vscodeConfig.arrowParens,
+            jsxSingleQuote: vscodeConfig.jsxSingleQuote,
+            htmlWhitespaceSensitivity: vscodeConfig.htmlWhitespaceSensitivity,
+            endOfLine: vscodeConfig.endOfLine,
+            quoteProps: vscodeConfig.quoteProps,
         }
     );
+
+    if (vscodeConfig.tslintIntegration && parser === 'typescript') {
+        return safeExecution(
+            () => {
+                const prettierTslint = require('prettier-tslint')
+                    .format as PrettierTslintFormat;
+                setUsedModule('prettier-tslint', 'Unknown', true);
+
+                return prettierTslint({
+                    text,
+                    filePath: fileName,
+                    fallbackPrettierOptions: prettierOptions,
+                });
+            },
+            text,
+            fileName
+        );
+    }
 
     if (vscodeConfig.eslintIntegration && doesParserSupportEslint) {
         return safeExecution(

@@ -4,13 +4,15 @@ import {
     workspace,
     DocumentFilter,
     DocumentSelector,
-    RelativePattern,
-    WorkspaceFolder,
     Disposable,
 } from 'vscode';
 import EditProvider from './PrettierEditProvider';
 import { setupErrorHandler, registerDisposables } from './errorHandler';
-import { allEnabledLanguages, allJSLanguages, getConfig } from './utils';
+import {
+    allEnabledLanguages,
+    rangeSupportedLanguages,
+    getConfig,
+} from './utils';
 import configFileListener from './configCacheHandler';
 import ignoreFileHandler from './ignoreFileHandler';
 
@@ -35,36 +37,11 @@ function disposeHandlers() {
     rangeFormatterHandler = undefined;
 }
 /**
- * Build formatter selectors for a given workspace folder
- * @param wf workspace folder
- */
-function selectorsCreator(wf: WorkspaceFolder) {
-    const allLanguages = allEnabledLanguages();
-    const allRangeLanguages = allJSLanguages();
-    const { disableLanguages } = getConfig(wf.uri);
-    const relativePattern = new RelativePattern(wf, '**');
-    function docFilterForLangs(languages: string[]) {
-        return languages.filter(l => !disableLanguages.includes(l)).map(
-            l =>
-                ({
-                    language: l,
-                    pattern: relativePattern,
-                    scheme: 'file'
-                } as DocumentFilter)
-        );
-    }
-    const languageSelector = docFilterForLangs(allLanguages);
-
-    const rangeLanguageSelector = docFilterForLangs(allRangeLanguages);
-
-    return { languageSelector, rangeLanguageSelector };
-}
-/**
  * Build formatter selectors
  */
 function selectors(): Selectors {
     const allLanguages = allEnabledLanguages();
-    const allRangeLanguages = allJSLanguages();
+    const allRangeLanguages = rangeSupportedLanguages();
     const { disableLanguages } = getConfig();
     const globalLanguageSelector = allLanguages.filter(
         l => !disableLanguages.includes(l)
@@ -87,24 +64,18 @@ function selectors(): Selectors {
     const untitledRangeLanguageSelector: DocumentFilter[] = globalRangeLanguageSelector.map(
         l => ({ language: l, scheme: 'untitled' })
     );
-    return workspace.workspaceFolders.reduce(
-        (previous, workspaceFolder) => {
-            let { languageSelector, rangeLanguageSelector } = previous;
-            const select = selectorsCreator(workspaceFolder);
-            return {
-                languageSelector: languageSelector.concat(
-                    select.languageSelector
-                ),
-                rangeLanguageSelector: rangeLanguageSelector.concat(
-                    select.rangeLanguageSelector
-                ),
-            };
-        },
-        {
-            languageSelector: untitledLanguageSelector,
-            rangeLanguageSelector: untitledRangeLanguageSelector,
-        }
+    const fileLanguageSelector: DocumentFilter[] = globalLanguageSelector.map(
+        l => ({ language: l, scheme: 'file' })
     );
+    const fileRangeLanguageSelector: DocumentFilter[] = globalRangeLanguageSelector.map(
+        l => ({ language: l, scheme: 'file' })
+    );
+    return {
+        languageSelector: untitledLanguageSelector.concat(fileLanguageSelector),
+        rangeLanguageSelector: untitledRangeLanguageSelector.concat(
+            fileRangeLanguageSelector
+        ),
+    };
 }
 
 export function activate(context: ExtensionContext) {

@@ -9,13 +9,18 @@ import {
     languages,
 } from 'vscode';
 
-import { allEnabledLanguages } from './utils';
+import { allEnabledLanguages, getConfig } from './utils';
+import { PrettierVSCodeConfig } from './types';
 
 let statusBarItem: StatusBarItem;
 let outputChannel: OutputChannel;
 let prettierInformation: string;
 
 function toggleStatusBarItem(editor: TextEditor | undefined): void {
+    if (statusBarItem === undefined) {
+        return;
+    }
+
     if (editor !== undefined) {
         // The function will be triggered everytime the active "editor" instance changes
         // It also triggers when we focus on the output panel or on the debug panel
@@ -30,12 +35,15 @@ function toggleStatusBarItem(editor: TextEditor | undefined): void {
         }
 
         const score = languages.match(allEnabledLanguages(), editor.document);
+        const disabledLanguages: PrettierVSCodeConfig["disableLanguages"] = getConfig(editor.document.uri).disableLanguages;
 
-        if (score > 0) {
+        if (score > 0 && !disabledLanguages.includes(editor.document.languageId)) {
             statusBarItem.show();
         } else {
             statusBarItem.hide();
         }
+    } else {
+        statusBarItem.hide();
     }
 }
 
@@ -43,16 +51,14 @@ export function registerDisposables(): Disposable[] {
     return [
         // Keep track whether to show/hide the statusbar
         window.onDidChangeActiveTextEditor(editor => {
-            if (statusBarItem !== undefined) {
-                toggleStatusBarItem(editor);
-            }
-        }),
+            toggleStatusBarItem(editor);
+        })
     ];
 }
 
 /**
  * Update the statusBarItem message and show the statusBarItem
- * 
+ *
  * @param message The message to put inside the statusBarItem
  */
 function updateStatusBar(message: string): void {
@@ -62,7 +68,7 @@ function updateStatusBar(message: string): void {
 }
 
 /**
- * 
+ *
  * @param module the module used
  * @param version the version of the module
  * @param bundled is it bundled with the extension or not
@@ -94,7 +100,7 @@ function addFilePath(msg: string, fileName: string): string {
 
 /**
  * Append messages to the output channel and format it with a title
- * 
+ *
  * @param message The message to append to the output channel
  */
 export function addToOutput(message: string): void {
@@ -110,8 +116,8 @@ export function addToOutput(message: string): void {
 
 /**
  * Execute a callback safely, if it doesn't work, return default and log messages.
- * 
- * @param cb The function to be executed, 
+ *
+ * @param cb The function to be executed,
  * @param defaultText The default value if execution of the cb failed
  * @param fileName The filename of the current document
  * @returns {string} formatted text or defaultText
@@ -150,7 +156,7 @@ export function safeExecution(
 /**
  * Setup the output channel and the statusBarItem.
  * Create a command to show the output channel
- * 
+ *
  * @returns {Disposable} The command to open the output channel
  */
 export function setupErrorHandler(): Disposable {

@@ -5,8 +5,28 @@ All notable changes to the "prettier-vscode" extension will be documented in thi
 <!-- Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file. -->
 
 ## [Unreleased]
+-   Prettier [1.17](https://prettier.io/blog/2019/04/12/1.17.0.html)
+-   New setting `quoteProps`. (prettier 1.17)
 
+-   Docs now explain how to lint TypeScript code with ESLint.
 -   New setting `config`. Specify path to prettier config file.
+
+## [1.8.0]
+
+-   Prettier [1.16](https://prettier.io/blog/2019/01/20/1.16.0.html)
+-   prettier-tslint 0.4.2
+
+## [1.7.0]
+
+-   Validate the `"prettier"` key in `package.json` using the prettier settings schema
+-   Prettier [1.15](https://prettier.io/blog/2018/11/07/1.15.0.html)
+-   New options: jsxSingleQuote, htmlWhitespaceSensitivity and endOfLine (More info in readme).
+
+## [1.6.0]
+
+-   disableLanguages only in User / Workspace settings (no more in folder settings).It allows to register formatters for every supported language.
+-   Prettier [1.14](https://prettier.io/blog/2018/07/29/1.14.0.html)
+-   New option: tslintIntegration (boolean) use `prettier-tslint` instead of `prettier`
 
 ## [1.5.0]
 

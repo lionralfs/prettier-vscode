@@ -8,10 +8,10 @@ Install through VS Code extensions. Search for `Prettier - Code formatter`
 
 [Visual Studio Code Market Place: Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
-Can also be installed using
+Can also be installed in VS Code: Launch VS Code Quick Open (Ctrl+P), paste the following command, and press enter.
 
 ```
-ext install prettier-vscode
+ext install esbenp.prettier-vscode
 ```
 
 &#x26a0; A word of warning-if you have any other code formatting extensions installed such as for example hugely popular `HookyQR.beautify` or `taichi.react-beautify` they might take precedence and format your code instead of Prettier leading to unexpected results.
@@ -44,6 +44,14 @@ You can turn on format-on-save on a per-language basis by scoping the setting:
     "editor.formatOnSave": true
 }
 ```
+
+### VSCode ESLint and TSLint Integration
+
+`prettier-eslint` and `prettier-tslint` are included with the installation of this extension.  There is no need for a separate local or global install of either for functionality.  
+
+`eslint`, `tslint`, and all peer dependencies required by your specific configuration must be installed locally.  Global installations will not be recognized.
+
+If you have both `"prettier.tslintIntegration"` and `"prettier.eslintIntegration"` enabled in your Visual Studio Code settings, then TSLint will be used to lint your TypeScript code. If you would rather use ESLint, disable the TSLint integration by setting `"prettier.tslintIntegration"` to `false`.
 
 ## Settings
 
@@ -93,6 +101,18 @@ If true, indent lines with tabs
 #### prettier.arrowParens (default: 'avoid')
 Include parentheses around a sole arrow function parameter
 
+#### prettier.jsxSingleQuote (default: false)
+Use single quotes instead of double quotes in JSX.
+
+#### prettier.htmlWhitespaceSensitivity (default: 'css')
+Specify the global whitespace sensitivity for HTML files. [Learn more here](https://prettier.io/docs/en/options.html#html-whitespace-sensitivity)
+
+#### prettier.endOfLine (default: 'auto')
+Specify the end of line used by prettier. [Learn more here](https://prettier.io/docs/en/options.html#end-of-line)
+
+#### prettier.quoteProps (default: 'as-needed')
+Change when properties in objects are quoted. [Learn more here](https://prettier.io/docs/en/options.html#quote-props)
+
 ### VSCode specific settings
 
 These settings are specific to VSCode and need to be set in the VSCode settings file. See the [documentation](https://code.visualstudio.com/docs/getstarted/settings) for how to do that.
@@ -100,6 +120,10 @@ These settings are specific to VSCode and need to be set in the VSCode settings 
 #### prettier.eslintIntegration (default: false) - JavaScript and TypeScript only
 Use *[prettier-eslint](https://github.com/prettier/prettier-eslint)* instead of *prettier*.
 Other settings will only be fallbacks in case they could not be inferred from ESLint rules.
+
+#### prettier.tslintIntegration (default: false) - JavaScript and TypeScript only
+Use *[prettier-tslint](https://github.com/azz/prettier-tslint)* instead of *prettier*.
+Other settings will only be fallbacks in case they could not be inferred from TSLint rules.
 
 #### prettier.stylelintIntegration (default: false) - CSS, SCSS and LESS only 
 Use *[prettier-stylelint](https://github.com/hugomrdias/prettier-stylelint)* instead of *prettier*.

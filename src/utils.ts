@@ -8,17 +8,20 @@ import {
     ParserOption,
 } from './types.d';
 
+const bundledPrettier = require('prettier') as Prettier;
+
 export function getConfig(uri?: Uri): PrettierVSCodeConfig {
     return workspace.getConfiguration('prettier', uri) as any;
 }
 
 export function getParsersFromLanguageId(
     languageId: string,
-    version: string,
+    prettierInstance: Prettier,
     path?: string
 ): ParserOption[] {
-    const language = getSupportLanguages(version).find(
+    const language = getSupportLanguages(prettierInstance).find(
         lang =>
+            Array.isArray(lang.vscodeLanguageIds) &&
             lang.vscodeLanguageIds.includes(languageId) &&
             // Only for some specific filenames
             (lang.extensions.length > 0 ||
@@ -34,26 +37,33 @@ export function getParsersFromLanguageId(
 
 export function allEnabledLanguages(): string[] {
     return getSupportLanguages().reduce(
-        (ids, language) => [...ids, ...language.vscodeLanguageIds],
+        (ids, language) => [...ids, ...(language.vscodeLanguageIds || [])],
         [] as string[]
     );
 }
 
-export function allJSLanguages(): string[] {
-    return getGroup('JavaScript')
-        .filter(language => language.group === 'JavaScript')
-        .reduce(
-            (ids, language) => [...ids, ...language.vscodeLanguageIds],
-            [] as string[]
-        );
+export function rangeSupportedLanguages(): string[] {
+    return [
+        'javascript',
+        'javascriptreact',
+        'typescript',
+        'typescriptreact',
+        'json',
+        'graphql',
+    ];
 }
 
 export function getGroup(group: string): PrettierSupportInfo['languages'] {
     return getSupportLanguages().filter(language => language.group === group);
 }
 
-function getSupportLanguages(version?: string) {
-    return (require('prettier') as Prettier).getSupportInfo(version).languages;
+function getSupportLanguages(prettierInstance: Prettier = bundledPrettier) {
+    // prettier.getSupportInfo was added in prettier@1.8.0
+    if (prettierInstance.getSupportInfo) {
+        return prettierInstance.getSupportInfo(prettierInstance.version).languages;
+    } else {
+        return bundledPrettier.getSupportInfo(prettierInstance.version).languages;
+    }
 }
 
 /**
